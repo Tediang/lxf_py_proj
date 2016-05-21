@@ -19,12 +19,12 @@ def test(loop):
         db='awesome'
     )
 
-    # u = User(name='lx2', email='lx2@example.com', passwd='1234567890', image='about:lx2')
+    u = User(name='Liang', email='Liang@example.com', passwd='Liang123', image='about:L2')
     #
-    # yield from u.save()
+    yield from u.save()
 
 
-    users = yield from User.findAll(orderBy='created_at')
+    # users = yield from User.findAll(orderBy='created_at')
     # for u in users:
     #     l.info('name: %s, email: %s' % (u.name, u.email))
 
@@ -34,10 +34,10 @@ def test(loop):
     # user.email = 'U_lx@emali.com'
     # yield from user.update()
 
-    users_del = yield from User.findAll(orderBy='created_at', limit=(1, 2))
-    for ud in users_del:
-        l.info('del user : %s ' % ud.name)
-        yield from ud.remove()
+    # users_del = yield from User.findAll(orderBy='created_at', limit=(1, 2))
+    # for ud in users_del:
+    #     l.info('del user : %s ' % ud.name)
+    #     yield from ud.remove()
 
 
 
