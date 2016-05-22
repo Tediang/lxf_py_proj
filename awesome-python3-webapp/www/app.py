@@ -78,7 +78,7 @@ def auth_factory(app, handler):
                 logging.info('set current user: %s' % user.email)
                 request.__user__ = user
         if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin):
-            return web.HTTPFound('signin')
+            return web.HTTPFound('/signin')
         return (yield from handler(request))
     return auth
 
@@ -109,6 +109,7 @@ def response_factory(app, handler):
                 resp.content_type = 'application/json;charset=utf-8'
                 return resp
             else:
+                r['__user__'] = request.__user__
                 resp = web.Response(body=app['__templating__'].get_template(template).render(**r).encode('utf-8'))
                 resp.content_type = 'text/html;charset=utf-8'
                 return resp
@@ -145,7 +146,7 @@ def init(loop):
 
     yield from ted_orm.create_pool(loop, user='root', password='centerm', db='awesome')
     app = web.Application(loop=loop, middlewares=[
-        logger_factory, response_factory
+        logger_factory, auth_factory, response_factory,
     ])
 
     init_jinja2(app, filters=dict(datetime=datetime_filter))
