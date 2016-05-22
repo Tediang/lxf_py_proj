@@ -13,7 +13,7 @@ from jinja2 import Environment, FileSystemLoader
 from coroweb import add_routes, add_static
 from models import User
 import ted_orm
-
+from handlers import cookie2user, COOKIE_NAME
 
 def init_jinja2(app, **kw):
     logging.info('init jinja2...')
@@ -54,10 +54,10 @@ def data_factory(app, handler):
     @asyncio.coroutine
     def parse_data(request):
         if request.method == 'POST':
-            if request.content_type.startwith('application/json'):
+            if request.content_type.startswith('application/json'):
                 request.__data__ = yield from request.json()
                 logging.info('request json: %s' % str(request.__data__))
-            elif request.content_type.startwith('application/x-www-form-urlencoded'):
+            elif request.content_type.startswith('application/x-www-form-urlencoded'):
                 request.__data__ = yield from request.post()
                 logging.info('request form" %s' % str(request.__data__))
 
@@ -65,17 +65,24 @@ def data_factory(app, handler):
 
     return parse_data
 
+@asyncio.coroutine
+def auth_factory(app, handler):
+    @asyncio.coroutine
+    def auth(request):
+        logging.info('check user: %s %s' % (request.method, request.path))
+        request.__user__ = None
+        cookie_str = request.cookies.get(COOKIE_NAME)
+        if cookie_str:
+            user = yield from cookie2user(cookie_str)
+            if user:
+                logging.info('set current user: %s' % user.email)
+                request.__user__ = user
+        if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin):
+            return web.HTTPFound('signin')
+        return (yield from handler(request))
+    return auth
 
-# def index(request):
-#     return web.Response(body=b'<h1>Awesome<h1>')
 
-# @get('/')
-# def index(request):
-#     users = yield from User.findAll()
-#     return {
-#         '__template__': 'test.html',
-#         'users':users
-#     }
 
 @asyncio.coroutine
 def response_factory(app, handler):
